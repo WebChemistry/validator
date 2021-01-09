@@ -29,7 +29,7 @@ final class FormObjectBuilder
 	#[ArrayShape([
 		'requireToCaption' => 'bool',
 	])]
-	public function build(Form $form, string $class, array $fields, array $options = []): void
+	public function build(Form $form, string $class, array $fields, array $groups = [], array $options = []): void
 	{
 		$options[self::REQUIRED_TO_CAPTION] ??= false;
 
@@ -42,7 +42,7 @@ final class FormObjectBuilder
 
 			$control = $this->createInput($form, $reflection, $value);
 
-			$this->rulesResolver->apply($control, $reflection);
+			$this->rulesResolver->apply($control, $reflection, $groups);
 			$this->applyOptions($control, $options);
 		}
 	}

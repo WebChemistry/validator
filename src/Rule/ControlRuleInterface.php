@@ -8,6 +8,6 @@ use ReflectionProperty;
 interface ControlRuleInterface
 {
 
-	public function apply(BaseControl $control, ReflectionProperty $property): void;
+	public function apply(BaseControl $control, ReflectionProperty $property, array $groups = []): void;
 
 }

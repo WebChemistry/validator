@@ -18,10 +18,10 @@ final class RulesResolver
 	{
 	}
 
-	public function apply(BaseControl $control, ReflectionProperty $property): void
+	public function apply(BaseControl $control, ReflectionProperty $property, array $groups = []): void
 	{
 		foreach ($this->rules as $rule) {
-			$rule->apply($control, $property);
+			$rule->apply($control, $property, $groups);
 		}
 	}
 

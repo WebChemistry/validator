@@ -24,7 +24,7 @@ final class ConstraintRules implements ControlRuleInterface
 	{
 	}
 
-	public function apply(BaseControl $control, ReflectionProperty $property): void
+	public function apply(BaseControl $control, ReflectionProperty $property, array $groups = []): void
 	{
 		/** @var ClassMetadata $metadata */
 		$metadata = $this->validator->getMetadataFor($property->getDeclaringClass()->getName());
@@ -35,7 +35,7 @@ final class ConstraintRules implements ControlRuleInterface
 		}
 
 		foreach ($propertyMetadata->getConstraints() as $constraint) {
-			if (($constraint->payload['form'] ?? null) === false) {
+			if (($constraint->payload['form'] ?? true) === false) {
 				continue;
 			}
 
@@ -62,14 +62,31 @@ final class ConstraintRules implements ControlRuleInterface
 				$control->addRule(Form::EMAIL);
 			} elseif ($constraint instanceof Regex) {
 				$control->addRule(function (IControl $control) use ($constraint): bool {
-					return preg_match($constraint->pattern, $control->getValue());
+					return (bool) preg_match($constraint->pattern, $control->getValue());
 				}, $constraint->message);
 
-				$control->setHtmlAttribute('pattern', $constraint->getHtmlPattern());
+				if (($constraint->payload['attribute'] ?? true) === true) {
+					$control->setHtmlAttribute('pattern', $constraint->getHtmlPattern());
+				}
 			} elseif ($constraint instanceof Url) {
 				$control->addRule(Form::URL);
 			}
 		}
+	}
+
+	private function validateGroups(array $constraintGroups, array $groups): bool
+	{
+		if (!$groups) {
+			$groups = ['Default'];
+		}
+
+		foreach ($constraintGroups as $group) {
+			if (in_array($group, $groups, true)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 }
