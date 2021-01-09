@@ -3,6 +3,7 @@
 namespace WebChemistry\Validator\DI;
 
 use Nette\DI\CompilerExtension;
+use WebChemistry\Validator\Constraint\UniqueEntityValidator;
 use WebChemistry\Validator\FormObjectBuilder;
 use WebChemistry\Validator\Resolver\CaptionResolver;
 use WebChemistry\Validator\Resolver\InputTypeResolver;
@@ -34,6 +35,9 @@ final class ValidatorExtension extends CompilerExtension
 
 		$builder->addDefinition($this->prefix('rule.constraint'))
 			->setType(ConstraintRules::class);
+
+		$builder->addDefinition($this->prefix('constraint.validator.uniqueEntity'))
+			->setFactory(UniqueEntityValidator::class);
 	}
 
 }
