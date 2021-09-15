@@ -5,11 +5,12 @@ namespace WebChemistry\Validator\Attribute;
 use Attribute;
 
 #[Attribute(Attribute::TARGET_PROPERTY)]
-final class InputType
+final class Input
 {
 
 	public function __construct(
 		public string $name,
+		public array $arguments = [],
 	)
 	{
 	}

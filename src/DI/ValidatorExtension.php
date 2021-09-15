@@ -4,12 +4,14 @@ namespace WebChemistry\Validator\DI;
 
 use Nette\DI\CompilerExtension;
 use WebChemistry\Validator\Constraint\UniqueEntityValidator;
-use WebChemistry\Validator\FormObjectBuilder;
-use WebChemistry\Validator\Resolver\CaptionResolver;
-use WebChemistry\Validator\Resolver\InputTypeResolver;
-use WebChemistry\Validator\Resolver\RulesResolver;
-use WebChemistry\Validator\Rule\ConstraintRules;
-use WebChemistry\Validator\Validator;
+use WebChemistry\Validator\Decorator\BuiltInTypeDecorator;
+use WebChemistry\Validator\Decorator\CaptionDecorator;
+use WebChemistry\Validator\Decorator\ControlDecoratorInterface;
+use WebChemistry\Validator\Decorator\RequireDecorator;
+use WebChemistry\Validator\Decorator\SymfonyValidatorDecorator;
+use WebChemistry\Validator\Factory\InputFactory;
+use WebChemistry\Validator\Factory\InputFactoryInterface;
+use WebChemistry\Validator\FormValidatorBuilder;
 
 final class ValidatorExtension extends CompilerExtension
 {
@@ -18,23 +20,30 @@ final class ValidatorExtension extends CompilerExtension
 	{
 		$builder = $this->getContainerBuilder();
 
-		$builder->addDefinition($this->prefix('validator'))
-			->setType(Validator::class);
+		$this->compiler->addExportedType(UniqueEntityValidator::class);
 
-		$builder->addDefinition($this->prefix('builder'))
-			->setType(FormObjectBuilder::class);
+		$builder->addDefinition($this->prefix('formValidator'))
+			->setType(FormValidatorBuilder::class);
 
-		$builder->addDefinition($this->prefix('resolver.inputType'))
-			->setType(InputTypeResolver::class);
+		$builder->addDefinition($this->prefix('inputFactory'))
+			->setType(InputFactoryInterface::class)
+			->setFactory(InputFactory::class);
 
-		$builder->addDefinition($this->prefix('resolver.caption'))
-			->setType(CaptionResolver::class);
+		$builder->addDefinition($this->prefix('decorator.symfonyValidator'))
+			->setType(ControlDecoratorInterface::class)
+			->setFactory(SymfonyValidatorDecorator::class);
 
-		$builder->addDefinition($this->prefix('resolver.rules'))
-			->setType(RulesResolver::class);
+		$builder->addDefinition($this->prefix('decorator.builtInType'))
+			->setType(ControlDecoratorInterface::class)
+			->setFactory(BuiltInTypeDecorator::class);
 
-		$builder->addDefinition($this->prefix('rule.constraint'))
-			->setType(ConstraintRules::class);
+		$builder->addDefinition($this->prefix('decorator.caption'))
+			->setType(ControlDecoratorInterface::class)
+			->setFactory(CaptionDecorator::class);
+
+		$builder->addDefinition($this->prefix('decorator.require'))
+			->setType(ControlDecoratorInterface::class)
+			->setFactory(RequireDecorator::class);
 
 		$builder->addDefinition($this->prefix('constraint.validator.uniqueEntity'))
 			->setFactory(UniqueEntityValidator::class);

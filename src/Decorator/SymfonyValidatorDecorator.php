@@ -1,31 +1,45 @@
 <?php declare(strict_types = 1);
 
-namespace WebChemistry\Validator\Rule;
+namespace WebChemistry\Validator\Decorator;
 
 use Nette\Application\UI\Form;
+use Nette\Forms\Control;
 use Nette\Forms\Controls\BaseControl;
 use Nette\Forms\Controls\TextBase;
-use Nette\Forms\IControl;
 use ReflectionProperty;
 use Symfony\Component\Validator\Constraints\Email;
+use Symfony\Component\Validator\Constraints\GreaterThan;
+use Symfony\Component\Validator\Constraints\GreaterThanOrEqual;
 use Symfony\Component\Validator\Constraints\Length;
+use Symfony\Component\Validator\Constraints\LessThan;
+use Symfony\Component\Validator\Constraints\LessThanOrEqual;
 use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Component\Validator\Constraints\Range;
 use Symfony\Component\Validator\Constraints\Regex;
 use Symfony\Component\Validator\Constraints\Url;
 use Symfony\Component\Validator\Mapping\ClassMetadata;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-final class ConstraintRules implements ControlRuleInterface
+final class SymfonyValidatorDecorator implements ControlDecoratorInterface
 {
 
 	public function __construct(
-		private ValidatorInterface $validator
+		private ValidatorInterface $validator,
 	)
 	{
 	}
 
-	public function apply(BaseControl $control, ReflectionProperty $property, array $groups = []): void
+	public function decorate(
+		Control $control,
+		ReflectionProperty $property,
+		array $groups = [],
+		array $options = []
+	): void
 	{
+		if (!$control instanceof BaseControl) {
+			return;
+		}
+
 		/** @var ClassMetadata $metadata */
 		$metadata = $this->validator->getMetadataFor($property->getDeclaringClass()->getName());
 
@@ -70,23 +84,29 @@ final class ConstraintRules implements ControlRuleInterface
 				}
 			} elseif ($constraint instanceof Url) {
 				$control->addRule(Form::URL);
+			} elseif ($constraint instanceof Range) {
+				$this->rangeRule($control, $constraint->min, $constraint->max);
+			} elseif ($constraint instanceof GreaterThan) {
+				$this->rangeRule($control, $constraint->value + 1);
+			} elseif ($constraint instanceof GreaterThanOrEqual) {
+				$this->rangeRule($control, $constraint->value);
+			} elseif ($constraint instanceof LessThan) {
+				$this->rangeRule($control, max: $constraint->value - 1);
+			} elseif ($constraint instanceof LessThanOrEqual) {
+				$this->rangeRule($constraint, max: $constraint->value);
 			}
 		}
 	}
 
-	private function validateGroups(array $constraintGroups, array $groups): bool
+	private function rangeRule(BaseControl $control, int|float|null $min = null, int|float|null $max = null): void
 	{
-		if (!$groups) {
-			$groups = ['Default'];
+		if ($min !== null && $max !== null) {
+			$control->addRule(Form::RANGE, null, [$min, $max]);
+		} elseif ($min !== null) {
+			$control->addRule(Form::MIN, null, $min);
+		} elseif ($max !== null) {
+			$control->addRule(Form::MAX, null, $max);
 		}
-
-		foreach ($constraintGroups as $group) {
-			if (in_array($group, $groups, true)) {
-				return true;
-			}
-		}
-
-		return false;
 	}
 
 }
